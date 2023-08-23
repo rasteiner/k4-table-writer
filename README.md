@@ -1,2 +1,7 @@
 # k4-table-writer
-Replace the default writer field with one that supports tables
+This is a Kirby 4 plugin. It replaces the default writer field with one that supports tables.
+
+https://github.com/rasteiner/k4-table-writer/assets/6684137/ae0d8adb-a8f4-401b-a4de-1d1ba481e4b7
+
+## Support
+This is a "one-off" project. No support will be provided. 
