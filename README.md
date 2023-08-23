@@ -5,3 +5,20 @@ https://github.com/rasteiner/k4-table-writer/assets/6684137/ae0d8adb-a8f4-401b-a
 
 ## Support
 This is a "one-off" project. No support will be provided. 
+
+## Blueprint
+```yml
+fields:
+  text:
+    type: writer
+    nodes:
+      - paragraph
+      - bulletList
+      - orderedList
+      - table:
+          background:
+            - '#65AF5D'
+            - '#8CC386'
+            - '#B2D7AE'
+            - '#C5E1C2'
+```
