@@ -1,0 +1,12 @@
+{
+  "name": "rasteiner/k4-table-writer",
+  "license": "MIT",
+  "type": "kirby-plugin",
+  "version": "0.0.0",
+  "require": {
+    "getkirby/composer-installer": "^1.1"
+  },
+  "config": {
+    "optimize-autoloader": true
+  }
+}
