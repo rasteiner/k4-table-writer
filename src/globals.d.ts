@@ -6,3 +6,7 @@ declare namespace panel {
     }
   }
 }
+
+declare interface ImportMeta {
+  glob: (pattern: string, options: { eager?: boolean, as?: string}) => any;
+}

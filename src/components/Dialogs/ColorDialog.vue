@@ -28,10 +28,9 @@
 </template>
 
 <script>
-import dialog from '@/mixins/dialog.js'
 
 export default {
-  mixins: [dialog],
+  mixins: ['dialog'],
   props: {
     value: {
       type: String,

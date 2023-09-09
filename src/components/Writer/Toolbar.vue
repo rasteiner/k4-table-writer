@@ -16,7 +16,7 @@
 				class="k-toolbar-button k-writer-toolbar-nodes"
 				@click="$refs.nodes.toggle()"
 			/>
-			<k-dropdown-content ref="nodes" theme="light">
+			<k-dropdown-content ref="nodes" :theme="inline ? 'light' : 'dark'">
 				<template v-for="(node, nodeType, nodeIndex) in nodeButtons">
 					<k-dropdown-item
 						:key="nodeType"
@@ -185,7 +185,7 @@ export default {
 
 			const buttons = {};
 
-			for (const node of this.nodes.entries()) {
+			for (const node of this.nodes) {
 				if (available[node]) {
 					buttons[node] = available[node];
 				}
