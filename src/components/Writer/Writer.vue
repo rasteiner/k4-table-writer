@@ -239,7 +239,8 @@ export default {
 					sub: new Sub(),
 					...this.createMarksFromPanelPlugins()
 				},
-				this.marks
+				this.marks,
+				(_,installed) => installed.sort((a, b) => (a.priority ?? 100) - (b.priority ?? 100))
 			);
 		},
 		createMarksFromPanelPlugins() {
@@ -346,7 +347,7 @@ export default {
 
 			let installed = [];
 			
-			for (const extension of Object.keys(available)) {
+			for (const extension in available) {
 				if (allowed.includes(extension)) {
 					installed.push(available[extension]);
 				}
