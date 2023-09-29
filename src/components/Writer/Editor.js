@@ -499,6 +499,7 @@ export default class Editor extends Emitter {
 		const { doc, tr } = this.state;
 		const resolvedFrom = utils.minMax(from, 0, doc.content.size);
 		const resolvedEnd = utils.minMax(to, 0, doc.content.size);
+
 		const selection = TextSelection.create(doc, resolvedFrom, resolvedEnd);
 		const transaction = tr.setSelection(selection);
 

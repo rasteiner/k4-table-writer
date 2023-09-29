@@ -9,7 +9,7 @@
 		}"
 	>
 		<!-- Nodes -->
-		<k-dropdown v-if="hasNodes" @mousedown.native.prevent>
+		<div v-if="hasNodes" @mousedown.prevent>
 			<k-button
 				:current="Boolean(activeNode)"
 				:icon="activeNode.icon ?? 'title'"
@@ -36,10 +36,10 @@
 					/>
 				</template>
 			</k-dropdown-content>
-		</k-dropdown>
+		</div>
 
 		<!-- Table options -->
-		<k-dropdown v-if="showTableOptions" @mousedown.native.prevent>
+		<div v-if="showTableOptions" @mousedown.prevent>
 			<k-button
 				:current="false"
 				icon="table"
@@ -61,7 +61,7 @@
 					</k-dropdown-item>
 				</template>
 			</k-dropdown-content>
-		</k-dropdown>
+		</div>
 
 		<!-- Divider -->
 		<div v-if="(hasNodes || showTableOptions) && hasMarks" class="k-toolbar-divider" />
@@ -96,7 +96,18 @@ export default {
 			type: Boolean
 		},
 		marks: {
-			default: true,
+			default: () => [
+				"bold",
+				"italic",
+				"underline",
+				"strike",
+				"code",
+				"|",
+				"link",
+				"email",
+				"|",
+				"clear"
+			],
 			type: [Array, Boolean]
 		},
 		nodes: {
