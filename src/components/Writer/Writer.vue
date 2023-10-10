@@ -273,7 +273,8 @@ export default {
 			}
 
 			// a node of this.nodes is represented by a string (e.g. "heading") or a object with a single property
-			const nodes = this.nodes.map((node) => {
+			
+			const nodes = this.nodes ? this.nodes.map((node) => {
 				if (typeof node === "string") {
 					return node;
 				}
@@ -284,7 +285,7 @@ export default {
 					this.nodeAttributes[key] = value;
 					return key;
 				}
-			});
+			}) : [];
 
 			return this.filterExtensions(
 				{
