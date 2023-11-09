@@ -1,88 +1,24 @@
 <template>
-	<nav
+	<k-toolbar
 		v-if="isOpen || !inline"
-		class="k-toolbar k-writer-toolbar"
+		ref="toolbar"
+		:buttons="buttons"
 		:data-inline="inline"
+		:theme="inline ? 'dark' : 'light'"
 		:style="{
-			bottom: position.y + 'px',
-			left: position.x + 'px',
+			top: position.y + 'px',
+			left: position.x + 'px'
 		}"
-	>
-		<!-- Nodes -->
-		<div v-if="hasNodes" @mousedown.prevent>
-			<k-button
-				:current="Boolean(activeNode)"
-				:icon="activeNode.icon ?? 'title'"
-				class="k-toolbar-button k-writer-toolbar-nodes"
-				@click="$refs.nodes.toggle()"
-			/>
-			<k-dropdown-content ref="nodes" :theme="inline ? 'light' : 'dark'">
-				<template v-for="(node, nodeType, nodeIndex) in nodeButtons">
-					<k-dropdown-item
-						:key="nodeType"
-						:current="activeNode?.id === node.id"
-						:disabled="activeNode?.when?.includes(node.name) === false"
-						:icon="node.icon"
-						@click="command(node.command ?? nodeType)"
-					>
-						{{ node.label }}
-					</k-dropdown-item>
-					<hr
-						v-if="
-							node.separator === true &&
-							nodeIndex !== Object.keys(nodeButtons).length - 1
-						"
-						:key="nodeType + '-divider'"
-					/>
-				</template>
-			</k-dropdown-content>
-		</div>
-
-		<!-- Table options -->
-		<div v-if="showTableOptions" @mousedown.prevent>
-			<k-button
-				:current="false"
-				icon="table"
-				class="k-toolbar-button k-writer-toolbar-table"
-				@click="$refs.tableOptions.toggle()"
-			/>
-			<k-dropdown-content ref="tableOptions" theme="light">
-				<template v-for="(option, index) in tableButtons">
-					<k-toggles-input v-if="Array.isArray(option)" :key="index" :options="option" :grow="false" @input="command($event)" :value="option.find(o => o.active)?.value" />
-					<hr v-else-if="option === '|'" :key="index" />
-					<k-dropdown-item
-						v-else
-						:key="option.name"
-						:current="false"
-						:disabled="false"
-						:icon="option.icon"
-						@click="command(option.name)">
-						{{ option.label }}
-					</k-dropdown-item>
-				</template>
-			</k-dropdown-content>
-		</div>
-
-		<!-- Divider -->
-		<div v-if="(hasNodes || showTableOptions) && hasMarks" class="k-toolbar-divider" />
-
-		<!-- Marks -->
-		<template v-for="(mark, markType) in markButtons">
-			<div v-if="mark === '|'" :key="markType" class="k-toolbar-divider" />
-			<k-button
-				v-else
-				:key="markType"
-				:current="activeMarks.includes(markType)"
-				:icon="mark.icon"
-				:title="mark.label"
-				class="k-toolbar-button"
-				@mousedown.native.prevent="command(mark.command ?? markType, $event)"
-			/>
-		</template>
-	</nav>
+		class="k-writer-toolbar"
+	/>
 </template>
 
 <script>
+/**
+ * Toolbar for `k-writer`
+ * @displayName WriterToolbar
+ * @internal
+ */
 import { getTableButtons } from './Extensions/Tables';
 
 export default {
@@ -119,23 +55,105 @@ export default {
 		return {
 			isOpen: false,
 			showTableOptions: false,
-			position: {
-				x: 0,
-				y: 0
-			}
+			position: { x: 0, y: 0 }
 		};
 	},
 	computed: {
-		activeMarks() {
-			return this.editor.activeMarks;
-		},
-		activeNodes() {
-			return this.editor.activeNodes;
-		},
 		activeNode() {
 			const nodes = Object.values(this.nodeButtons);
-			const active = nodes.find((button) => this.isNodeActive(button));
-			return active ?? false;
+			return nodes.find((button) => this.isNodeActive(button)) ?? false;
+		},
+		/**
+		 * Button objects for k-toolbar
+		 */
+		 buttons() {
+			const buttons = [];
+			// Nodes
+			if (this.hasNodes) {
+				const nodes = [];
+				let nodeIndex = 0;
+				for (const nodeType in this.nodeButtons) {
+					const node = this.nodeButtons[nodeType];
+					nodes.push({
+						current: this.activeNode?.id === node.id,
+						disabled: this.activeNode?.when?.includes(node.name) === false,
+						icon: node.icon,
+						label: node.label,
+						click: () => this.command(node.command ?? nodeType)
+					});
+					if (
+						node.separator === true &&
+						nodeIndex !== Object.keys(this.nodeButtons).length - 1
+					) {
+						nodes.push("-");
+					}
+					nodeIndex++;
+				}
+				buttons.push({
+					current: Boolean(this.activeNode),
+					icon: this.activeNode.icon ?? "title",
+					dropdown: nodes
+				});
+			}
+			// Divider between nodes and marks
+			if (this.hasNodes && (this.hasMarks || this.showTableOptions)) {
+				buttons.push("|");
+			}
+
+			if (this.showTableOptions) {
+				
+				buttons.push({
+					current: this.editor.activeNodes.includes("table"),
+					icon: "table",
+					dropdown: this.tableButtons.map(button => {
+						// if button is an array
+						if (Array.isArray(button)) {
+							return button.map(b => {
+								return {
+									...b,
+									click: () => this.command(b.value)
+								}
+							});
+						}
+
+						if (typeof button === "string") {
+							return button;
+						}
+
+						if (typeof button === "object") {
+							return {
+								...button,
+								click: () => this.command(button.name)
+							};
+						}
+
+						return button;
+					})
+				});
+
+				if(this.hasMarks) {
+					buttons.push("|");
+				}
+			}
+
+
+			// Marks
+			if (this.hasMarks) {
+				for (const markType in this.markButtons) {
+					const mark = this.markButtons[markType];
+					if (mark === "|") {
+						buttons.push("|");
+						continue;
+					}
+					buttons.push({
+						current: this.editor.activeMarks.includes(markType),
+						icon: mark.icon,
+						label: mark.label,
+						click: (e) => this.command(mark.command ?? markType, e)
+					});
+				}
+			}
+			return buttons;
 		},
 		hasMarks() {
 			return this.$helper.object.length(this.markButtons) > 0;
@@ -143,19 +161,12 @@ export default {
 		hasNodes() {
 			return this.$helper.object.length(this.nodeButtons) > 1;
 		},
-		tableButtons() {
-			if (this.showTableOptions === false) {
-				return [];
-			}
-
-			return tableButtons;
-		},
 		markButtons() {
-			if (this.marks === false) {
+			const available = this.editor.buttons("mark");
+
+			if (this.marks === false || this.$helper.object.length(available) === 0) {
 				return {};
 			}
-
-			const available = this.editor.buttons("mark");
 
 			if (this.marks === true) {
 				return available;
@@ -174,19 +185,12 @@ export default {
 			return buttons;
 		},
 		nodeButtons() {
-			if (this.nodes === false) {
+			const available = this.editor.buttons("node");
+			if (this.nodes === false || this.$helper.object.length(available) === 0) {
 				return {};
 			}
 
-			const available = this.editor.buttons("node");
-
-			// remove the paragraph when certain nodes are requested to be loaded
-			if (
-				Array.isArray(this.nodes) === true &&
-				this.nodes.length !== 3 &&
-				this.nodes.includes("paragraph") === false &&
-				available.paragraph
-			) {
+			if (this.editor.nodes.doc.content !== "block+" && available.paragraph) {
 				delete available.paragraph;
 			}
 
@@ -205,8 +209,7 @@ export default {
 			return buttons;
 		},
 		tableButtons() {
-			const b =  getTableButtons(this.editor);
-			return b;
+			return getTableButtons(this.editor);
 		}
 	},
 	methods: {
@@ -239,29 +242,36 @@ export default {
 		 * @returns {Boolean}
 		 */
 		isNodeActive(node) {
-			if (this.activeNodes.includes(node.name) === false) {
+			if (this.editor.activeNodes.includes(node.name) === false) {
 				return false;
 			}
 
-			// since the list element also contains a paragraph,
-			// it is confused whether the list element is an active node
-			// this solves the issue
+			// Since the list element also contains a paragraph,
+			// don't consider paragraph as an active node when
+			// the list item is active
 			if (node.name === "paragraph") {
-				return this.activeNodes.length === 1;
+				return (
+					this.editor.activeNodes.includes("listItem") === false &&
+					this.editor.activeNodes.includes("quote") === false
+				);
 			}
 
+			// Te might have multiple node buttons for the same node
+			// (e.g. headings). To know which one is active, we need
+			// to compare the active attributes with the
+			// attributes of the node button
 			if (node.attrs) {
-				const attrs = Object.values(this.editor.activeNodeAttrs);
-				const active = attrs.find(
-					(node) => JSON.stringify(node) === JSON.stringify(node.attrs)
+				const activeAttrs = Object.values(this.editor.activeNodeAttrs);
+				const activeNode = activeAttrs.find(
+					(attrs) => JSON.stringify(attrs) === JSON.stringify(node.attrs)
 				);
 
-				if (active) {
-					return true;
+				if (activeNode === undefined) {
+					return false;
 				}
 			}
 
-			return false;
+			return true;
 		},
 		/**
 		 * Opens the toolbar
@@ -279,64 +289,54 @@ export default {
 		 * based on the current selection in the editor
 		 */
 		setPosition() {
-			const { from, to } = this.editor.selection;
+			// Get sizes for the toolbar itself but also the editor box
+			const toolbar = this.$el.getBoundingClientRect();
+			const editor = this.editor.element.getBoundingClientRect();
+			const menu = document
+				.querySelector(".k-panel-menu")
+				.getBoundingClientRect();
 
+			// Create pseudo rectangle for the selection
+			const { from, to } = this.editor.selection;
 			const start = this.editor.view.coordsAtPos(from);
 			const end = this.editor.view.coordsAtPos(to, true);
+			const selection = new DOMRect(
+				start.left,
+				start.top,
+				end.right - start.left,
+				end.bottom - start.top
+			);
 
-			// The box in which the tooltip is positioned, to use as base
-			const editor = this.editor.element.getBoundingClientRect();
+			// Calculate the position of the toolbar: centered above the selection
+			let x = selection.x - editor.x + selection.width / 2 - toolbar.width / 2;
+			let y = selection.y - editor.y - toolbar.height - 5;
 
-			// Find a center-ish x position from the selection endpoints (when
-			// crossing lines, end may be more to the left)
-			let left = (start.left + end.left) / 2 - editor.left;
-			let bottom = Math.round(editor.bottom - start.top) - 10;
+			// Contain in editor (if possible)
+			if (toolbar.width < editor.width) {
+				if (x < 0) {
+					x = 0;
+				} else if (x + toolbar.width > editor.width) {
+					x = editor.width - toolbar.width;
+				}
+			} else {
+				// Contain in viewport
+				const left = editor.x + x;
+				const right = left + toolbar.width;
+				const safeSpaceLeft = menu.width + 20;
+				const safeSpaceRight = 20;
 
-			// Align to writer editor
-			const toolbar = this.$el.clientWidth;
-
-			// adjust left overflow
-			if (left - toolbar / 2 < 0) {
-				left = left + (toolbar / 2 - left) - 10;
+				if (left < safeSpaceLeft) {
+					x += safeSpaceLeft - left;
+				} else if (right > window.innerWidth - safeSpaceRight) {
+					x -= right - (window.innerWidth - safeSpaceRight);
+				}
 			}
 
-			// adjust right overflow
-			if (left + toolbar / 2 > editor.width) {
-				left = left - (left + toolbar / 2 - editor.width) + 10;
-			}
-
-			this.position = {
-				y: bottom,
-				x: left
-			};
+			this.position = { x, y };
 		}
 	}
 };
 </script>
 
 <style>
-/** TODO: .k-writer:has(.k-writer-toolbar:not([data-inline="true"])) */
-.k-writer:not([data-toolbar-inline="true"]) {
-	grid-template-areas: "topbar" "content";
-	grid-template-rows: var(--toolbar-size) 1fr;
-	gap: 0;
-}
-
-/** TODO: .k-writer-toolbar:has(~ :focus-within) .k-button[aria-current]  */
-.k-writer:focus-within .k-writer-toolbar .k-button[aria-current] {
-	color: var(--color-focus);
-}
-
-.k-writer-toolbar[data-inline="true"] {
-	--toolbar-text: var(--color-white);
-	--toolbar-back: var(--color-black);
-	--toolbar-hover: rgba(255, 255, 255, 0.2);
-	--toolbar-border: var(--color-gray-800);
-
-	position: absolute;
-	transform: translateX(-50%) translateY(-0.75rem);
-	z-index: calc(var(--z-dropdown) + 1);
-	box-shadow: var(--shadow-toolbar);
-	border-radius: var(--rounded);
-}
 </style>

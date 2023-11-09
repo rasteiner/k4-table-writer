@@ -91,23 +91,23 @@ export function getTableButtons(editor) {
       {
         value: 'table-alignLeft',
         icon: 'text-left',
-        text: 'Align left',
-        active: align === 'left',
+        label: 'Align left',
+        current: align === 'left',
       },
       {
         value: 'table-alignCenter',
         icon: 'text-center',
-        text: 'Align center',
-        active: align === 'center',
+        label: 'Align center',
+        current: align === 'center',
       },
       {
         value: 'table-alignRight',
         icon: 'text-right',
-        text: 'Align right',
-        active: align === 'right',
+        label: 'Align right',
+        current: align === 'right',
       },
     ],
-    '|',
+    '-',
     {
       name: 'table-addColumnBefore',
       icon: 'insert-column-left',
@@ -123,7 +123,7 @@ export function getTableButtons(editor) {
       icon: 'delete-column',
       label: 'Delete column',
     },
-    '|',
+    '-',
     {
       name: 'table-addRowBefore',
       icon: 'insert-row-top',
@@ -139,7 +139,7 @@ export function getTableButtons(editor) {
       icon: 'delete-row',
       label: 'Delete row',
     },
-    '|',
+    '-',
     {
       name: 'table-mergeCells',
       icon: 'merge-cells',
@@ -150,7 +150,7 @@ export function getTableButtons(editor) {
       icon: 'split-cell',
       label: 'Split cell',
     },
-    '|',
+    '-',
     {
       name: 'table-resetWidths',
       icon: 'undo',
@@ -160,7 +160,7 @@ export function getTableButtons(editor) {
 
   if(hasBackground) {
     buttons.push(
-      '|',
+      '-',
       {
         name: 'table-background',
         icon: 'palette',

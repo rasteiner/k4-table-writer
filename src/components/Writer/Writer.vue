@@ -11,8 +11,7 @@
 		<k-writer-toolbar
 			v-if="editor && !disabled"
 			ref="toolbar"
-			v-bind="toolbar"
-			:editor="editor"
+			v-bind="toolbarOptions"
 			@command="onCommand"
 		/>
 	</div>
@@ -111,6 +110,14 @@ export default {
 		},
 		isCursorAtStart() {
 			return this.editor.selectionIsAtStart;
+		},
+		toolbarOptions() {
+			return {
+				// if custom set of marks is enabled, use as toolbar default as well
+				marks: Array.isArray(this.marks) ? this.marks : undefined,
+				...this.toolbar,
+				editor: this.editor
+			};
 		}
 	},
 	watch: {
@@ -216,9 +223,14 @@ export default {
 
 		this.isEmpty = this.editor.isEmpty();
 		this.json = this.editor.getJSON();
+
+		this.$panel.events.on("click", this.onBlur);
+		this.$panel.events.on("focus", this.onBlur);
 	},
 	beforeDestroy() {
 		this.editor.destroy();
+		this.$panel.events.off("click", this.onBlur);
+		this.$panel.events.off("focus", this.onBlur);
 	},
 	methods: {
 		command(command, ...args) {
@@ -247,12 +259,12 @@ export default {
 			const plugins = window.panel.plugins.writerMarks ?? {};
 			const marks = {};
 
-			// take each extenstion object and turn
+			// take each extension object and turn
 			// it into an instance that extends the Mark class
 			for (const name in plugins) {
 				marks[name] = Object.create(
 					Mark.prototype,
-					Object.getOwnPropertyDescriptors(plugins[name])
+					Object.getOwnPropertyDescriptors({ name, ...plugins[name] })
 				);
 			}
 
@@ -325,12 +337,12 @@ export default {
 			const plugins = window.panel.plugins.writerNodes ?? {};
 			const nodes = {};
 
-			// take each extenstion object and turn
+			// take each extension object and turn
 			// it into an instance that extends the Node class
 			for (const name in plugins) {
 				nodes[name] = Object.create(
 					Node.prototype,
-					Object.getOwnPropertyDescriptors(plugins[name])
+					Object.getOwnPropertyDescriptors({ name, ...plugins[name] })
 				);
 			}
 
@@ -365,6 +377,11 @@ export default {
 		},
 		getSplitContent() {
 			return this.editor.getHTMLStartToSelectionToEnd();
+		},
+		onBlur(event) {
+			if (this.$el.contains(event.target) === false) {
+				this.$refs.toolbar?.close();
+			}
 		},
 		onCommand(command, ...args) {
 			this.editor.command(command, ...args);
